@@ -25,6 +25,11 @@ interface Sucursal {
   descripcion: string
 }
 
+const formatNumber = (num: number): string => {
+  const roundedNum = Math.round(num);
+  return roundedNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 const Inventory = () => {
   const { token, signOut } = useAuth()
   const [isGridView, setIsGridView] = useState(true)
@@ -259,7 +264,7 @@ const Inventory = () => {
       
       {/* Header Fijo */}
       <div className="bg-[#0455c1] rounded-b-3xl pb-4 sticky top-0 z-10">
-        <div className="flex justify-between items-center px-4 pt-12 pb-4">
+        <div className="flex justify-between items-center px-4 pt-2 pb-4">
           <h1 className="text-white text-xl font-bold">Toma de Inventario</h1>
           <div className="flex gap-2">
             <button 
@@ -310,7 +315,7 @@ const Inventory = () => {
             >
               <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
               <p className="font-bold my-1">{item.ar_descripcion}</p>
-              <p className="text-[#0455c1] font-medium">Gs. {item.ar_pvg}</p>
+              <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
               <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
             </motion.div>
           ))}
