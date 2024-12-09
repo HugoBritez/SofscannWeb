@@ -52,6 +52,7 @@ const Inventory = () => {
   const [fecha] = useState(new Date().toISOString().split('T')[0])
   const [ultimoNroInventario, setUltimoNroInventario] = useState(1)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [inputActive, setInputActive] = useState(false)
 
   const handleEditarArticulo = (articulo: Articulo) => {
     setArticuloSeleccionado(articulo)
@@ -63,7 +64,13 @@ const Inventory = () => {
     setModalVisible(true)
   }
 
-  
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    if (!inputActive) {
+      e.preventDefault();
+      setInputActive(true);
+      setTimeout(() => setInputActive(false), 300);
+    }
+  };
 
   useEffect(() => {
     const fetchSucursalesYDepositos = async () => {
@@ -292,6 +299,8 @@ const Inventory = () => {
               className="flex-1 p-3 rounded-lg"
               value={articuloBusqueda}
               onChange={(e) => handleBusqueda(e.target.value)}
+              onClick={handleInputClick}
+              readOnly={!inputActive}
             />
           </div>
         </div>
