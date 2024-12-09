@@ -226,7 +226,7 @@ const Inventory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="h-screen w-full flex flex-col overflow-hidden">
       <Toaster 
         position="bottom-center"
         toastOptions={{
@@ -266,7 +266,7 @@ const Inventory = () => {
       />
       
       {/* Header Fijo */}
-      <div className="bg-[#0455c1] rounded-b-3xl pb-4 sticky top-0 z-10">
+      <div className="bg-[#0455c1] rounded-b-3xl pb-4 z-10">
         <div className="flex justify-between items-center px-4 pt-2 pb-4">
           <h1 className="text-white text-xl font-bold">Toma de Inventario</h1>
           <div className="flex gap-2">
@@ -302,38 +302,40 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Lista de artículos con scroll */}
-      <div className="flex-1 overflow-auto p-4" style={{ height: 'calc(100vh - 180px)' }}>
-        {articulos.length > 0 ? (
-          <motion.div 
-            className={`grid ${isGridView ? 'grid-cols-2' : 'grid-cols-1'} gap-4 auto-rows-max`}
-            layout
-          >
-            {articulos.map((item) => (
-              <motion.div
-                key={item.al_codigo}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => handleEditarArticulo(item)}
-                className="bg-white p-4 rounded-lg shadow cursor-pointer"
-              >
-                <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
-                <p className="font-bold my-1">{item.ar_descripcion}</p>
-                <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
-                <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          articuloBusqueda && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <p className="text-lg font-medium">No se encontraron artículos</p>
-              <p className="text-sm">Intente con otro código o descripción</p>
-            </div>
-          )
-        )}
+      {/* Lista de artículos con scroll - Ajustamos las clases */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4">
+          {articulos.length > 0 ? (
+            <motion.div 
+              className={`grid ${isGridView ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}
+              layout
+            >
+              {articulos.map((item) => (
+                <motion.div
+                  key={item.al_codigo}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => handleEditarArticulo(item)}
+                  className="bg-white p-4 rounded-lg shadow cursor-pointer"
+                >
+                  <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
+                  <p className="font-bold my-1">{item.ar_descripcion}</p>
+                  <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
+                  <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            articuloBusqueda && (
+              <div className="min-h-[200px] flex flex-col items-center justify-center text-gray-500">
+                <p className="text-lg font-medium">No se encontraron artículos</p>
+                <p className="text-sm">Intente con otro código o descripción</p>
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {/* Drawer con animación */}
