@@ -140,9 +140,6 @@ const Inventory = () => {
 
       setArticulos(data.body)
       
-      if (data.body.length === 0) {
-        toast.error('No se encontraron artículos')
-      }
     } catch (error) {
       console.error('Error al buscar artículos:', error)
       toast.error('Error al buscar artículos')
