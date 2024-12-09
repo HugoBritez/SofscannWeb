@@ -4,6 +4,7 @@ import { API_URL } from '../config/config'
 import { Menu, Grid, List, LogOut } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+import { auditar } from '../utils/auditoria'
 
 interface Articulo {
   ar_codigo: number
@@ -176,7 +177,7 @@ const Inventory = () => {
         inventario: {
           fecha,
           hora: new Date().toLocaleTimeString().slice(0, 5),
-          operador: 1,
+          operador: localStorage.getItem('user_id') || 1,
           sucursal: sucursal?.id || 1,
           deposito: depositoId,
           tipo: 1,
@@ -214,6 +215,14 @@ const Inventory = () => {
         throw new Error('Error en la respuesta del servidor')
       }
 
+      await auditar(
+        42,
+        1,
+        ultimoNroInventario,
+        Number(localStorage.getItem('user_id')) || 1,
+        `Inventario creado para artículo ${articuloSeleccionado.ar_codigo}`
+      )
+
       setModalVisible(false)
       toast.success("El inventario se cargó satisfactoriamente")
       setArticuloBusqueda('')
@@ -227,56 +236,60 @@ const Inventory = () => {
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden">
-      <Toaster 
+      <Toaster
         position="bottom-center"
         toastOptions={{
-          className: '',
+          className: "",
           duration: 3000,
           style: {
-            background: '#fff',
-            color: '#363636',
-            padding: '16px',
-            borderRadius: '10px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            fontSize: '14px',
-            maxWidth: '500px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            background: "#fff",
+            color: "#363636",
+            padding: "16px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            fontSize: "14px",
+            maxWidth: "500px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
           },
           success: {
             iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
+              primary: "#10B981",
+              secondary: "#fff",
             },
             style: {
-              border: '1px solid #10B981',
+              border: "1px solid #10B981",
             },
           },
           error: {
             iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
+              primary: "#EF4444",
+              secondary: "#fff",
             },
             style: {
-              border: '1px solid #EF4444',
+              border: "1px solid #EF4444",
             },
           },
         }}
       />
-      
+
       {/* Header Fijo */}
       <div className="bg-[#0455c1] rounded-b-3xl pb-4 z-10">
         <div className="flex justify-between items-center px-4 pt-2 pb-4">
           <h1 className="text-white text-xl font-bold">Toma de Inventario</h1>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setIsGridView(!isGridView)}
               className="bg-white/20 p-2 rounded"
             >
-              {isGridView ? <Grid size={20} color="white" /> : <List size={20} color="white" />}
+              {isGridView ? (
+                <Grid size={20} color="white" />
+              ) : (
+                <List size={20} color="white" />
+              )}
             </button>
-            <button 
+            <button
               className="bg-white/20 p-2 rounded"
               onClick={() => setIsDrawerOpen(true)}
             >
@@ -306,8 +319,10 @@ const Inventory = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
           {articulos.length > 0 ? (
-            <motion.div 
-              className={`grid ${isGridView ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}
+            <motion.div
+              className={`grid ${
+                isGridView ? "grid-cols-2" : "grid-cols-1"
+              } gap-4`}
               layout
             >
               {articulos.map((item) => (
@@ -322,15 +337,21 @@ const Inventory = () => {
                 >
                   <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
                   <p className="font-bold my-1">{item.ar_descripcion}</p>
-                  <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
-                  <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
+                  <p className="text-[#0455c1] font-medium">
+                    Gs. {formatNumber(item.ar_pvg)}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Stock: {item.al_cantidad}
+                  </p>
                 </motion.div>
               ))}
             </motion.div>
           ) : (
             articuloBusqueda && (
               <div className="min-h-[200px] flex flex-col items-center justify-center text-gray-500">
-                <p className="text-lg font-medium">No se encontraron artículos</p>
+                <p className="text-lg font-medium">
+                  No se encontraron artículos
+                </p>
                 <p className="text-sm">Intente con otro código o descripción</p>
               </div>
             )
@@ -342,38 +363,40 @@ const Inventory = () => {
       <AnimatePresence>
         {isDrawerOpen && (
           <>
-            <motion.div 
+            <motion.div
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsDrawerOpen(false)}
             />
-            <motion.div 
+            <motion.div
               className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg z-50"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 20 }}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4">
                 <h2 className="text-xl font-bold mb-6">Ajustes</h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Sucursal
                     </label>
-                    <select 
+                    <select
                       className="w-full p-2 border rounded-md"
-                      value={sucursal?.id || ''}
+                      value={sucursal?.id || ""}
                       onChange={(e) => {
-                        const selected = sucursales.find(s => s.id === Number(e.target.value))
-                        setSucursal(selected || null)
+                        const selected = sucursales.find(
+                          (s) => s.id === Number(e.target.value)
+                        );
+                        setSucursal(selected || null);
                       }}
                     >
-                      {sucursales.map(suc => (
+                      {sucursales.map((suc) => (
                         <option key={suc.id} value={suc.id}>
                           {suc.descripcion}
                         </option>
@@ -385,16 +408,19 @@ const Inventory = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Depósito
                     </label>
-                    <select 
+                    <select
                       className="w-full p-2 border rounded-md"
-                      value={deposito?.dep_codigo || ''}
+                      value={deposito?.dep_codigo || ""}
                       onChange={(e) => {
-                        const selected = depositos.find(d => d.dep_codigo === Number(e.target.value))
-                        setDeposito(selected || null)
-                        if (selected) setDepositoId(String(selected.dep_codigo))
+                        const selected = depositos.find(
+                          (d) => d.dep_codigo === Number(e.target.value)
+                        );
+                        setDeposito(selected || null);
+                        if (selected)
+                          setDepositoId(String(selected.dep_codigo));
                       }}
                     >
-                      {depositos.map(dep => (
+                      {depositos.map((dep) => (
                         <option key={dep.dep_codigo} value={dep.dep_codigo}>
                           {dep.dep_descripcion}
                         </option>
@@ -405,8 +431,8 @@ const Inventory = () => {
 
                 <button
                   onClick={() => {
-                    signOut()
-                    setIsDrawerOpen(false)
+                    signOut();
+                    setIsDrawerOpen(false);
                   }}
                   className="flex items-center gap-2 mt-auto absolute bottom-4 left-4 text-gray-600 hover:text-gray-900 justify-center"
                 >
@@ -422,19 +448,26 @@ const Inventory = () => {
       {/* Modal de Edición */}
       {modalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-11/12 max-w-2xl max-h-[90vh]">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Editar artículo</h2>
-                <button onClick={() => setModalVisible(false)} className="text-gray-500">
+                <button
+                  onClick={() => setModalVisible(false)}
+                  className="text-gray-500"
+                >
                   <span className="text-2xl">&times;</span>
                 </button>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-500">Inventario nro: {ultimoNroInventario}</p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4  overflow-y-auto">
+                <p className="text-sm text-gray-500">
+                  Inventario nro: {ultimoNroInventario}
+                </p>
                 <p className="font-bold">{articuloSeleccionado?.ar_codigo}</p>
-                <p className="text-lg">{articuloSeleccionado?.ar_descripcion}</p>
+                <p className="text-lg">
+                  {articuloSeleccionado?.ar_descripcion}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -446,7 +479,9 @@ const Inventory = () => {
                     type="number"
                     className="w-full p-2 border rounded"
                     value={existenciaActual}
-                    onChange={(e) => setExistenciaActual(Number(e.target.value))}
+                    onChange={(e) =>
+                      setExistenciaActual(Number(e.target.value))
+                    }
                   />
                 </div>
                 <div>
@@ -457,7 +492,9 @@ const Inventory = () => {
                     type="number"
                     className="w-full p-2 border rounded"
                     value={existenciaFisica}
-                    onChange={(e) => setExistenciaFisica(Number(e.target.value))}
+                    onChange={(e) =>
+                      setExistenciaFisica(Number(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -522,7 +559,7 @@ const Inventory = () => {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export default Inventory 
