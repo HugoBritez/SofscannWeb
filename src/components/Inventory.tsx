@@ -304,27 +304,36 @@ const Inventory = () => {
 
       {/* Lista de artículos con scroll */}
       <div className="flex-1 overflow-auto p-4" style={{ height: 'calc(100vh - 180px)' }}>
-        <motion.div 
-          className={`grid ${isGridView ? 'grid-cols-2' : 'grid-cols-1'} gap-4 auto-rows-max`}
-          layout
-        >
-          {articulos.map((item) => (
-            <motion.div
-              key={item.al_codigo}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => handleEditarArticulo(item)}
-              className="bg-white p-4 rounded-lg shadow cursor-pointer"
-            >
-              <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
-              <p className="font-bold my-1">{item.ar_descripcion}</p>
-              <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
-              <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+        {articulos.length > 0 ? (
+          <motion.div 
+            className={`grid ${isGridView ? 'grid-cols-2' : 'grid-cols-1'} gap-4 auto-rows-max`}
+            layout
+          >
+            {articulos.map((item) => (
+              <motion.div
+                key={item.al_codigo}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => handleEditarArticulo(item)}
+                className="bg-white p-4 rounded-lg shadow cursor-pointer"
+              >
+                <p className="text-xs text-gray-500">{item.ar_codbarra}</p>
+                <p className="font-bold my-1">{item.ar_descripcion}</p>
+                <p className="text-[#0455c1] font-medium">Gs. {formatNumber(item.ar_pvg)}</p>
+                <p className="text-sm text-gray-500 mt-1">Stock: {item.al_cantidad}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          articuloBusqueda && (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <p className="text-lg font-medium">No se encontraron artículos</p>
+              <p className="text-sm">Intente con otro código o descripción</p>
+            </div>
+          )
+        )}
       </div>
 
       {/* Drawer con animación */}
