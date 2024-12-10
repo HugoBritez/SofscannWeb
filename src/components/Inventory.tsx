@@ -448,7 +448,7 @@ const Inventory = () => {
       {/* Modal de Edición */}
       {modalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg w-11/12 max-w-2xl max-h-[90vh]">
+          <div className="bg-white rounded-lg w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Editar artículo</h2>
@@ -460,14 +460,16 @@ const Inventory = () => {
                 </button>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg mb-4  overflow-y-auto">
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <p className="text-sm text-gray-500">
                   Inventario nro: {ultimoNroInventario}
                 </p>
-                <p className="font-bold">{articuloSeleccionado?.ar_codigo}</p>
-                <p className="text-lg">
-                  {articuloSeleccionado?.ar_descripcion}
-                </p>
+                <div className='flex space-x-14' >
+                  <p className="font-bold">{articuloSeleccionado?.ar_codigo}</p>
+                  <p className="text-lg">
+                    {articuloSeleccionado?.ar_descripcion}
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -542,7 +544,7 @@ const Inventory = () => {
                 </label>
                 <textarea
                   className="w-full p-2 border rounded"
-                  rows={4}
+                  rows={2}
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
                 />
