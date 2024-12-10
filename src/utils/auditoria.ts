@@ -10,7 +10,6 @@ interface AuditoriaData {
   obs: string
 }
 
-
 export async function auditar(
   entidad: number, 
   accion: number, 
@@ -30,7 +29,6 @@ export async function auditar(
     vendedor,
     obs,
   }
-  
   
   try {
     const response = await fetch(`${API_URL}/auditoria`, {
