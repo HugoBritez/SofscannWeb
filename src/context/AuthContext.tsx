@@ -76,28 +76,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
       
       if (data.body && data.body.token && Array.isArray(data.body.usuario) && data.body.usuario.length > 0) {
-        const userData = data.body.usuario[0]  // Tomamos el primer elemento del array
+        const userData = data.body.usuario[0]
         const jwtToken = data.body.token
 
         // Guardamos en localStorage
         localStorage.setItem('userToken', jwtToken)
         localStorage.setItem('usuario', JSON.stringify(userData))
+        localStorage.setItem('user_id', userData.op_codigo.toString())
 
         // Actualizamos el estado
         setToken(jwtToken)
         setUsuario(userData)
         setIsAuthenticated(true)
+
+        // Movemos la auditoría aquí, después de establecer el token
+        try {
+          await auditar(
+            10, 
+            4, 
+            userData.op_codigo,
+            userData.op_codigo,
+            `Inicio de sesión usuario: ${usuario} en el data colector`
+          )
+        } catch (error) {
+          console.error('Error en auditoría:', error)
+          // No lanzamos el error para que no afecte el login
+        }
       } else {
         throw new Error('Formato de respuesta inválido')
       }
-
-      await auditar(
-        10, 
-        4, 
-        Number(data.user_id),
-        Number(data.user_id),
-        `Inicio de sesión usuario: ${usuario} en el data colector`
-      );
     } catch (error: any) {
       console.error('Error en autenticación:', error)
       throw new Error(error.message || 'Error al iniciar sesión')

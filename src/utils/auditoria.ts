@@ -17,7 +17,7 @@ export async function auditar(
   vendedor: number, 
   obs: string
 ) {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('userToken')
   const usuario = localStorage.getItem('user_name')
   
   const datos: AuditoriaData = {
