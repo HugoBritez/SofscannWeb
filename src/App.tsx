@@ -5,6 +5,7 @@ import Inventory from "../src/components/Inventory";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import Reconteo from "./components/Reconteo";
+import Report from "./components/Report";
 
 function App() {
   return (
@@ -39,6 +40,10 @@ function AppRoutes() {
         element={isAuthenticated ? <Reconteo /> : <Navigate to="/login" />}
       />
 
+      <Route
+        path="/report"
+        element={isAuthenticated ? <Report /> : <Navigate to="/login" />}
+      />
       {/* Redirección por defecto */}
       <Route
         path="/"

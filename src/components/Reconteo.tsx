@@ -8,6 +8,7 @@ import {
   LogOut,
   ScanIcon,
   ClipboardCheck,
+  ChartColumn,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -69,8 +70,8 @@ const Reconteo = () => {
   const [depositos, setDepositos] = useState<Deposito[]>([]);
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [deposito, setDeposito] = useState<Deposito | null>(null);
-  const [existenciaActual, setExistenciaActual] = useState<string>('');
-  const [existenciaFisica, setExistenciaFisica] = useState<string>('');
+  const [existenciaActual, setExistenciaActual] = useState<string>("");
+  const [existenciaFisica, setExistenciaFisica] = useState<string>("");
   const [vencimiento, setVencimiento] = useState("");
   const [lote, setLote] = useState("");
   const [codigoBarra, setCodigoBarra] = useState("");
@@ -292,7 +293,6 @@ const Reconteo = () => {
     fetchUbicaciones();
     fetchSububicaciones();
   }, [token]);
-
 
   const cargarInventario = async () => {
     try {
@@ -544,6 +544,9 @@ const Reconteo = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4">
+                <div className="flex justify-center mb-4 items-center w-full gap-4">
+                  <button className="bg-blue-500 p-2 rounded-md text-white font-semibold">Iniciar Reconteo</button>
+                </div>
                 <h2 className="text-xl font-bold mb-6">Módulos</h2>
                 <ul className="space-y-2">
                   <li>
@@ -568,6 +571,18 @@ const Reconteo = () => {
                     >
                       <ClipboardCheck />
                       <span>Reconteo de inventario</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setIsDrawerOpen(false);
+                        navigate("/report");
+                      }}
+                      className="flex items-center gap-2 w-full text-gray-600 hover:text-gray-900"
+                    >
+                      <ChartColumn />
+                      <span>Reporte de inventario</span>
                     </button>
                   </li>
                 </ul>
@@ -677,9 +692,7 @@ const Reconteo = () => {
                     disabled
                     className="w-full p-2 border rounded"
                     value={existenciaActual}
-                    onChange={(e) =>
-                      setExistenciaActual(e.target.value)
-                    }
+                    onChange={(e) => setExistenciaActual(e.target.value)}
                   />
                 </div>
                 <div>
@@ -690,9 +703,7 @@ const Reconteo = () => {
                     type="number"
                     className="w-full p-2 border rounded"
                     value={existenciaFisica}
-                    onChange={(e) =>
-                      setExistenciaFisica(e.target.value)
-                    }
+                    onChange={(e) => setExistenciaFisica(e.target.value)}
                   />
                 </div>
               </div>
@@ -752,7 +763,7 @@ const Reconteo = () => {
                     Lote
                   </label>
                   <input
-                  disabled
+                    disabled
                     placeholder="Solo p/ lote nuevo"
                     type="text"
                     className="w-full p-2 border rounded"
@@ -765,18 +776,19 @@ const Reconteo = () => {
                     Código de barras
                   </label>
                   <input
-                  disabled
+                    disabled
                     type="text"
                     className="w-full p-2 border rounded"
                     value={codigoBarra}
                     onChange={(e) => setCodigoBarra(e.target.value)}
                   />
                 </div>
-                
               </div>
-              <div className="flex w-full mb-4"><p className="font-semibold text-sm text-red-600">Diferencia: {calcularDiferencia()} </p></div>
-
-
+              <div className="flex w-full mb-4">
+                <p className="font-semibold text-sm text-red-600">
+                  Diferencia: {calcularDiferencia()}{" "}
+                </p>
+              </div>
               <button
                 onClick={cargarInventario}
                 className="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-600"

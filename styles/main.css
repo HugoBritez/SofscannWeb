@@ -12,3 +12,7 @@ body {
 #app {
     padding: 20px;
 } 
+
+/* SELECT ii.id  iiv.i_inventario_item as id, iiv.i_lote al_lote, iiv.loteid al_codigo, ii.idArticulo al_articulo,  ii.stock_actual as cdad_conteo_1 FROM inventarios_items ii
+   INNER JOIN inventario_items_vencimiento iiv ON iiv.i_inventario_item = ii.id
+   WHERE idArticulo = 18417;*/

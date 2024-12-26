@@ -1,7 +1,7 @@
 import  { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_URL } from '../config/config'
-import { Menu, Grid, List, LogOut,  ScanIcon, ClipboardCheck } from 'lucide-react'
+import { Menu, Grid, List, LogOut,  ScanIcon, ClipboardCheck, ChartColumn } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { auditar } from '../utils/auditoria'
@@ -78,7 +78,6 @@ const Inventory = () => {
   const [prevVencimiento, setPrevVencimiento] = useState('');
   const [prevLote, setPrevLote] = useState('');
 
-
   // Función para manejar el cambio de vencimiento
 const handleVencimientoChange = (nuevoVencimiento: string) => {
   setPrevVencimiento(vencimiento);
@@ -102,13 +101,11 @@ const handleLoteChange = (nuevoLote: string) => {
     setExistenciaActual(articulo.al_cantidad.toString())
     setExistenciaFisica(articulo.al_cantidad.toString())
 
-
     setVencimiento(articuloVencimiento);
     setPrevVencimiento(articuloVencimiento);  
     setLote(articuloLote);
     setPrevLote(articuloLote);
 
-    
     setCodigoBarra(articulo.ar_codbarra)
     setModalVisible(true)
     setUbicacion(articulo.ar_ubicacicion)
@@ -144,13 +141,10 @@ const handleLoteChange = (nuevoLote: string) => {
           setDeposito(defaultDeposito)
           setDepositoId(String(defaultDeposito.dep_codigo))
         }
-
-
       } catch (error) {
         console.error('Error al cargar datos:', error)
       }
     }
-
     fetchSucursalesYDepositos()
   }, [])
 
@@ -168,7 +162,6 @@ const handleLoteChange = (nuevoLote: string) => {
         if (data.body && data.body.length > 0) {
           setUltimoNroInventario(data.body[0].nro_inventario);
           console.log(data.body[0].nro_inventario);
-
         }
       } catch (error) {
         console.error('Error al obtener último número de inventario:', error);
@@ -207,8 +200,6 @@ const handleLoteChange = (nuevoLote: string) => {
 
       const data = await response.json()
 
-
-
       if (!data || !Array.isArray(data.body)) {
         if (codigo !== codigoLimpio) {
           const queryParamsOriginal = new URLSearchParams({
@@ -245,9 +236,16 @@ const handleLoteChange = (nuevoLote: string) => {
   }
 
   const handleBusqueda = (texto: string) => {
-    setArticuloBusqueda(texto)
-    buscarArticuloPorCodigo(texto)
-  }
+    setArticuloBusqueda(texto);
+    if (!texto || texto.trim() === '') {
+      setArticulos([]);
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      buscarArticuloPorCodigo(texto);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  };
 
   const formatearVencimiento = (vencimiento: string) => {
     const date = new Date(vencimiento);
@@ -296,6 +294,100 @@ const handleLoteChange = (nuevoLote: string) => {
     const codigo = Number(ubicacion);
     return isNaN(codigo) ? 0 : codigo;
   };
+
+  const cargarItemInventario = async () => {
+    try {
+      if (!articuloSeleccionado) {
+        toast.error("No hay artículos para cargar")
+        return
+      }
+
+      if (!vencimiento) {
+        toast.error("Debe seleccionar una fecha de vencimiento")
+        return
+      }
+      if(!ubicacion) {
+        toast.error("Debe seleccionar una ubicación")
+        return
+      }
+      if(!sububicacion) {
+        toast.error("Debe seleccionar una sububicación")
+        return
+      }
+      if(!lote) {
+        toast.error("Debe determinar un lote")
+        return
+      }
+
+      if (prevVencimiento !== vencimiento && prevLote === lote) {
+        toast.error("Debe cambiar el número de lote si cambia la fecha de vencimiento");
+        return;
+      }
+
+      const inventarioData = {
+        inventario: {
+          fecha,
+          hora: new Date().toLocaleTimeString().slice(0, 5),
+          operador: localStorage.getItem('user_id') || 1,
+          sucursal: sucursal?.id || 1,
+          deposito: depositoId,
+          tipo: 1,
+          estado: 1,
+          in_obs: observaciones || "",
+          nro_inventario: ultimoNroInventario,
+        },
+        inventario_items: [{
+          idArticulo: articuloSeleccionado.ar_codigo,
+          cantidad: Number(existenciaFisica),
+          costo: articuloSeleccionado.ar_pcg,
+          stock_actual: Number(existenciaActual),
+          stock_dif: Number(existenciaFisica) - Number(existenciaActual),
+          codbarra: codigoBarra || "",
+          ubicacion: getUbicacionCodigo(ubicacion),
+          sububicacion: sububicacion,
+          vencimientos: [
+            {
+              lote: lote || "SIN LOTE",
+              fecha_vence: formatearVencimiento(vencimiento),
+              loteid: String(lote) || 0,
+            },
+          ],
+        }],
+      }
+
+      console.log(inventarioData)
+
+      const response = await fetch(`${API_URL}/articulos/agregar-item-inventario`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(inventarioData)
+      })
+
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor')
+      }
+
+      await auditar(
+        42,
+        1,
+        ultimoNroInventario,
+        Number(localStorage.getItem('user_id')) || 1,
+        `Lote creado/cargado para artículo ${articuloSeleccionado.ar_codigo} desde Data Colector`
+      )
+
+      setModalVisible(false)
+      toast.success("El inventario se cargó satisfactoriamente")
+      setArticuloBusqueda('')
+      setArticulos([])
+      searchInputRef.current?.focus()
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al cargar el inventario")
+    }
+  }
 
 
 
@@ -490,7 +582,7 @@ const handleLoteChange = (nuevoLote: string) => {
       {/* Lista de artículos con scroll - Ajustamos las clases */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-          {articulos.length > 0 ? (
+          {articuloBusqueda && articulos.length > 0 ? (
             <motion.div
               className={`grid ${
                 isGridView ? "grid-cols-2" : "grid-cols-1"
@@ -579,6 +671,18 @@ const handleLoteChange = (nuevoLote: string) => {
                     <span>Reconteo de inventario</span>
                   </button>
                 </li>
+                <li>
+                    <button
+                      onClick={() => {
+                        setIsDrawerOpen(false);
+                        navigate("/report");
+                      }}
+                      className="flex items-center gap-2 w-full text-gray-600 hover:text-gray-900"
+                    >
+                      <ChartColumn />
+                      <span>Reporte de inventario</span>
+                    </button>
+                  </li>
               </ul>
               </div>
               <div className="p-4">
@@ -785,7 +889,7 @@ const handleLoteChange = (nuevoLote: string) => {
               </div>
 
               <button
-                onClick={cargarInventario}
+                onClick={cargarItemInventario}
                 className="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-600"
               >
                 Guardar

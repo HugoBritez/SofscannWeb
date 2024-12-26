@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('userToken', jwtToken)
         localStorage.setItem('usuario', JSON.stringify(userData))
         localStorage.setItem('user_id', userData.op_codigo.toString())
+        localStorage.setItem('user_name', userData.op_nombre)
 
         // Actualizamos el estado
         setToken(jwtToken)
