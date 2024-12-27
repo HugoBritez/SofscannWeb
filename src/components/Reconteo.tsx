@@ -548,9 +548,6 @@ const Reconteo = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4">
-                <div className="flex justify-center mb-4 items-center w-full gap-4">
-                  <button className="bg-blue-500 p-2 rounded-md text-white font-semibold">Iniciar Reconteo</button>
-                </div>
                 <h2 className="text-xl font-bold mb-6">Módulos</h2>
                 <ul className="space-y-2">
                   <li>

@@ -609,7 +609,7 @@ const Report = () => {
               setMarcaSeleccionada(Number(e.target.value));
             }}
           >
-            <option value="0">Multimarca</option>
+            <option value="0">Todas las marcas</option>
             {marcas.map((ma) => (
               <option key={ma.ma_codigo} value={ma.ma_codigo}>
                 {ma.ma_descripcion}
