@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Reporte {
+  id: number;
   marca: string;
   deposito: string;
   fecha: string;
@@ -26,6 +27,8 @@ interface Reporte {
   diferencia: number;
   operador: string;
   inicio_fecha_reconteo: string;
+  proveedor: string;
+  categoria: string;
 }
 
 interface Configuraciones {
@@ -38,6 +41,21 @@ interface Deposito {
   dep_descripcion: string;
   dep_principal: number;
   dep_inventario: number;
+}
+
+interface Marca {
+  ma_codigo: number;
+  ma_descripcion: string;
+}
+
+interface Categoria {
+  ca_codigo: number;
+  ca_descripcion: string;
+}
+
+interface Proveedor {
+  pro_codigo: number;
+  pro_razon: string;
 }
 
 const Report = () => {
@@ -56,6 +74,15 @@ const Report = () => {
     useState<Deposito | null>(null);
   const [depositoId, setDepositoId] = useState<string>("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState<number | null>(
+    null
+  );
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(0);
+  const [mostrarTabla, setMostrarTabla] = useState(false);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchSucursalesYDepositos = async () => {
@@ -87,26 +114,69 @@ const Report = () => {
       }
     };
 
+    const fetchMarcas = async () => {
+      try {
+        const response = await fetch(`${API_URL}/marcas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setMarcas(data.body || []);
+      } catch (error) {
+        console.error("Error al obtener marcas:", error);
+      }
+    };
+
+    const fetchCategorias = async () => {
+      try {
+        const response = await fetch(`${API_URL}/categorias`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setCategorias(data.body || []);
+      } catch (error) {
+        console.error("Error al obtener categorías:", error);
+      }
+    }
+
+    const fetchProveedores = async () => {
+      try {
+        const response = await fetch(`${API_URL}/proveedores`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setProveedores(data.body || []);
+      } catch (error) {
+        console.error("Error al obtener proveedores:", error);
+      }
+    }
+
     fetchSucursalesYDepositos();
+    fetchMarcas();
+    fetchCategorias();
+    fetchProveedores();
   }, []);
 
-  const fetchReporte = async () => {
-    const response = await fetch(`${API_URL}/articulos/reporte-reconteo`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      if (response.body) {
-        const data = await response.json();
-        console.log(data);
-        setReporte(data.body);
-      } else {
-        console.error("Response body is null");
-      }
-    } else {
-      console.error("Error al obtener el reporte");
+  const fetchReporte = async (marca?: number, deposito?: number, categoria?: number, proveedor?:number): Promise<void> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (marca !== undefined) queryParams.append('marca', marca.toString());
+      if (deposito !== undefined) queryParams.append('deposito', deposito.toString());
+      if(categoria !== undefined) queryParams.append('categoria', categoria.toString());
+      if(proveedor !== undefined) queryParams.append('proveedor', proveedor.toString());
+  
+      const response = await fetch(`${API_URL}/articulos/reporte-reconteo?${queryParams.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) throw new Error('Error al obtener el reporte');
+  
+      const data = await response.json();
+      setReporte(data.body);
+      console.log("Reporte obtenido:", data.body);
+    } catch (error) {
+      console.error("Error:", error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -194,19 +264,46 @@ const Report = () => {
     });
 
     const marcasArray = Array.from(marcas);
-    return marcasArray.length > 15 ? marcasArray.slice(0, 15) : marcasArray;
+    return marcasArray.length > 1 ?   'Multimarcas' : marcasArray[0];
+  };
+
+  const obtenerListaProveedores = () => {
+    if (reporte.length === 0) return [];
+
+    const proveedores = new Set<string>();
+
+    reporte.forEach((articulo) => {
+      proveedores.add(articulo.proveedor);
+    });
+
+    const proveedoresArray =  Array.from(proveedores);
+    return proveedoresArray.length > 1 ? 'Todos los proveedores' : proveedoresArray[0];
+  }
+
+ const obtenerCategorias = () => {
+    if (reporte.length === 0) return [];
+
+    const categorias = new Set<string>();
+
+    reporte.forEach((articulo) => {
+      categorias.add(articulo.categoria);
+    });
+
+    const categoriasArray = Array.from(categorias);
+    return categoriasArray.length > 1 ? 'Todas las categorias' : categoriasArray[0];
   };
 
   // Ejemplo de uso
   const marca = obtenerListaMarcas();
-  const listaMarcas = marca.join(", ");
+  const listaMarcas = marca;
   const deposito = obtenerDeposito();
   const operadores = obtenerListaOperadores();
   const listaOperadores = operadores.join(", ");
+  const proveedorLista = obtenerListaProveedores();
+  const categoriasLista = obtenerCategorias();
 
   useEffect(() => {
     const fetchData = async () => {
-      await fetchReporte();
       await fetchConfiguraciones();
       setDatosListos(true);
     };
@@ -308,18 +405,20 @@ const Report = () => {
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(6);
       pdf.text(`Depósito: ${deposito}`, 10, marginTop + 12);
-      pdf.text(`Marca/as: ${listaMarcas}, ...`, 10, marginTop + 16);
+      pdf.text(`Marca/as: ${listaMarcas}`, 10, marginTop + 16);
       pdf.text(`Operador/es: ${listaOperadores}`, 10, marginTop + 20);
+      pdf.text(`Proveedor/es: ${proveedorLista}`, pdfWidth/2, marginTop + 12, { align: "left" });
+      pdf.text(`Categoria/s: ${categoriasLista}`, pdfWidth/2, marginTop + 16, { align: "left" });
       pdf.text(
         `Fecha Inventario: ${obtenerMenorFechaInventario()} - ${obtenerMayorFechaInventario()}`,
-        pdfWidth / 2,
+        pdfWidth -60,
         marginTop + 12,
-        { align: "center" }
+        { align: "left" }
       );
       pdf.text(
         `Fecha Reconteo: ${obtenerMenorFechaReconteo()} - ${obtenerMayorFechaReconteo()}`,
         pdfWidth - 60,
-        marginTop + 12,
+        marginTop + 16,
         { align: "left" }
       );
 
@@ -337,7 +436,7 @@ const Report = () => {
         pageImgData,
         "PNG",
         0,
-        marginTop + 32,
+        marginTop + 30,
         pdfWidth,
         pageHeightScaled - marginBottom
       );
@@ -417,9 +516,28 @@ const Report = () => {
   const nombreEmpresa = configuracionesEmpresa[0]?.valor || "N/A";
   const rucEmpresa = configuracionesEmpresa[30]?.valor || "N/A";
 
-  const generarPdfRapidamente = async () => {
-    await generarPDF();
-    navigate("/reconteo");
+  const generarInforme = async () => {
+    try {
+      setMostrarTabla(true);
+      
+       await fetchReporte(
+        marcaSeleccionada !== null ? marcaSeleccionada : undefined,
+        depositoId ? Number(depositoId) : undefined,
+        categoriaSeleccionada !== null ? categoriaSeleccionada : undefined,
+        proveedorSeleccionado !== null ? proveedorSeleccionado : undefined
+      );
+  
+      if (Object.keys(reporte).length === 0) {
+        throw new Error('No se encontraron datos para generar el informe');
+      }
+  
+      await generarPDF();
+  
+    } catch (error) {
+      console.error("Error al generar informe:", error);
+    } finally {
+      setMostrarTabla(false);
+    }
   };
 
   const handleSignOut = () => {
@@ -434,7 +552,6 @@ const Report = () => {
 
   useEffect(() => {
     if (datosListos && !pdfGenerado) {
-      // generarPdfRapidamente();
       setPdfGenerado(true);
     }
   }, [datosListos, pdfGenerado]);
@@ -461,10 +578,10 @@ const Report = () => {
       </div>
 
       <div className="flex  flex-col justify-between items-center px-4 pt-2 pb-4 gap-4">
-        <div className="flex items-start gap-2 flex-col">
-          <label className="font-bold text-sm">Selecciona un deposito:</label>
+        <div className="flex items-center gap-2 flex-col w-full">
+          <label className="font-bold  text-sm">Selecciona un deposito:</label>
           <select
-            className="w-full p-2 border rounded-md"
+            className="w-72 p-2 border rounded-md"
             value={depositoSeleccionado?.dep_codigo || ""}
             onChange={(e) => {
               const selected = depositos.find(
@@ -481,26 +598,69 @@ const Report = () => {
             ))}
           </select>
         </div>
-        <div className="flex items-start gap-2 flex-col">
-          <label className="font-bold text-sm">Selecciona una marca(Opcional):</label>
+        <div className="flex items-center gap-2 flex-col w-full">
+          <label className="font-bold text-sm">
+            Selecciona una marca:
+          </label>
           <select
-            className="w-full p-2 border rounded-md"
-            value={depositoSeleccionado?.dep_codigo || ""}
+            className="w-72 p-2 border rounded-md"
+            value={marcaSeleccionada || ""}
             onChange={(e) => {
-              const selected = depositos.find(
-                (d) => d.dep_codigo === Number(e.target.value)
-              );
-              setDepositoSeleccionado(selected || null);
-              if (selected) setDepositoId(String(selected.dep_codigo));
+              setMarcaSeleccionada(Number(e.target.value));
             }}
           >
-            {depositos.map((dep) => (
-              <option key={dep.dep_codigo} value={dep.dep_codigo}>
-                {dep.dep_descripcion}
+            <option value="0">Multimarca</option>
+            {marcas.map((ma) => (
+              <option key={ma.ma_codigo} value={ma.ma_codigo}>
+                {ma.ma_descripcion}
               </option>
             ))}
           </select>
         </div>
+        <div className="flex items-center gap-2 flex-col w-full">
+          <label className="font-bold text-sm">
+            Selecciona una categoria:
+          </label>
+          <select
+            className="w-72 p-2 border rounded-md"
+            value={categoriaSeleccionada || ""}
+            onChange={(e) => {
+              setCategoriaSeleccionada(Number(e.target.value));
+            }}
+          >
+            <option value="0">Todas las categorias</option>
+            {categorias.map((ca) => (
+              <option key={ca.ca_codigo} value={ca.ca_codigo}>
+                {ca.ca_descripcion}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2 flex-col w-full">
+          <label className="font-bold text-sm">
+            Selecciona un proveedor:
+          </label>
+          <select
+            className="w-72 p-2 border rounded-md"
+            value={proveedorSeleccionado || ""}
+            onChange={(e) => {
+              setProveedorSeleccionado(Number(e.target.value));
+            }}
+          >
+            <option value="0">Todos los proveedores</option>
+            {proveedores.map((pro) => (
+              <option key={pro.pro_codigo} value={pro.pro_codigo}>
+               {pro.pro_codigo}-{pro.pro_razon}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          className="bg-blue-500 p-2 rounded-md text-white font-semibold"
+          onClick={generarInforme}
+        >
+          Generar informe
+        </button>
       </div>
 
       {/* Drawer con animación */}
@@ -523,11 +683,7 @@ const Report = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4">
-                <div className="flex justify-center mb-4 items-center w-full gap-4">
-                  <button className="bg-blue-500 p-2 rounded-md text-white font-semibold">
-                    Iniciar Reconteo
-                  </button>
-                </div>
+                
                 <h2 className="text-xl font-bold mb-6">Módulos</h2>
                 <ul className="space-y-2">
                   <li>
@@ -585,7 +741,9 @@ const Report = () => {
       </AnimatePresence>
 
       <div
-        className="flex flex-col p-4 px-16 h-full mb-30 mt-8 w-[2160px] mx-auto "
+        className={`flex flex-col p-4 px-16 h-full mb-30 mt-2 w-[2160px] mx-auto ${
+          !mostrarTabla ? "hidden" : ""
+        }`}
         id="reporte"
       >
         <div className="flex-1">
@@ -610,7 +768,7 @@ const Report = () => {
               <tbody>
                 {/* Aquí puedes mapear tus datos para generar las filas */}
                 {reporte.map((articulo) => (
-                  <tr key={articulo.codigo}>
+                  <tr key={articulo.id}>
                     <td className="text-lg py-1 px-1 border-b">
                       {articulo.codigobarra}
                     </td>

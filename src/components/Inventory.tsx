@@ -393,33 +393,6 @@ const handleLoteChange = (nuevoLote: string) => {
 
   const cargarInventario = async () => {
     try {
-      if (!articuloSeleccionado) {
-        toast.error("No hay artículos para cargar")
-        return
-      }
-
-      if (!vencimiento) {
-        toast.error("Debe seleccionar una fecha de vencimiento")
-        return
-      }
-      if(!ubicacion) {
-        toast.error("Debe seleccionar una ubicación")
-        return
-      }
-      if(!sububicacion) {
-        toast.error("Debe seleccionar una sububicación")
-        return
-      }
-      if(!lote) {
-        toast.error("Debe determinar un lote")
-        return
-      }
-
-      if (prevVencimiento !== vencimiento && prevLote === lote) {
-        toast.error("Debe cambiar el número de lote si cambia la fecha de vencimiento");
-        return;
-      }
-
       const inventarioData = {
         inventario: {
           fecha,
@@ -431,24 +404,8 @@ const handleLoteChange = (nuevoLote: string) => {
           estado: 1,
           in_obs: observaciones || "",
           nro_inventario: ultimoNroInventario,
+          inicio_fecha_reconteo: '0001-01-01',
         },
-        inventario_items: [{
-          idArticulo: articuloSeleccionado.ar_codigo,
-          cantidad: Number(existenciaFisica),
-          costo: articuloSeleccionado.ar_pcg,
-          stock_actual: Number(existenciaActual),
-          stock_dif: Number(existenciaFisica) - Number(existenciaActual),
-          codbarra: codigoBarra || "",
-          ubicacion: getUbicacionCodigo(ubicacion),
-          sububicacion: sububicacion,
-          vencimientos: [
-            {
-              lote: lote || "SIN LOTE",
-              fecha_vence: formatearVencimiento(vencimiento),
-              loteid: String(lote) || 0,
-            },
-          ],
-        }],
       }
 
       console.log(inventarioData)
@@ -471,7 +428,7 @@ const handleLoteChange = (nuevoLote: string) => {
         1,
         ultimoNroInventario,
         Number(localStorage.getItem('user_id')) || 1,
-        `Lote creado/cargado para artículo ${articuloSeleccionado.ar_codigo} desde Data Colector`
+        `Inventario creado para desde Data Colector`
       )
 
       setModalVisible(false)
@@ -645,6 +602,11 @@ const handleLoteChange = (nuevoLote: string) => {
               onClick={(e) => e.stopPropagation()}
             >
              <div className='p-4'>
+             <div className="flex justify-center mb-4 items-center w-full gap-4">
+                  <button className="bg-blue-500 p-2 rounded-md text-white font-semibold" onClick={cargarInventario}>
+                    Iniciar Inventario Nuevo
+                  </button>
+                </div>
               <h2 className="text-xl font-bold mb-6">Módulos</h2>
               <ul className="space-y-2">
               <li>

@@ -50,6 +50,11 @@ interface Sububicaciones {
   s_descripcion: string;
 }
 
+interface Marca {
+  ma_codigo: number;
+  ma_descripcion: string;
+}
+
 const formatNumber = (num: number): string => {
   const roundedNum = Math.round(num);
   return roundedNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -83,6 +88,8 @@ const Reconteo = () => {
   const [, setSububicaciones] = useState<Sububicaciones[]>([]);
   const [prevVencimiento, setPrevVencimiento] = useState("");
   const [prevLote, setPrevLote] = useState("");
+  const [marcas, setMarcas] = useState<any[]>([]);
+  const [marcaSeleccionada, setMarcaSeleccionada] = useState<number | null>(null);
 
   // Función para manejar el cambio de vencimiento
   const handleVencimientoChange = (nuevoVencimiento: string) => {
@@ -155,7 +162,20 @@ const Reconteo = () => {
       }
     };
 
+    const fetchMarcas = async () => {
+      try {
+        const response = await fetch(`${API_URL}/marcas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setMarcas(data.body || []);
+      } catch (error) {
+        console.error("Error al obtener marcas:", error);
+      }
+    }
+
     fetchSucursalesYDepositos();
+    fetchMarcas();
   }, []);
 
   useEffect(() => {
