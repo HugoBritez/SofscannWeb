@@ -264,7 +264,7 @@ const Report = () => {
     });
 
     const marcasArray = Array.from(marcas);
-    return marcasArray.length > 1 ?   'Multimarcas' : marcasArray[0];
+    return marcasArray.length > 1 ?   'Todas las marcas' : marcasArray[0];
   };
 
   const obtenerListaProveedores = () => {
